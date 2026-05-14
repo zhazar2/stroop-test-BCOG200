@@ -1,253 +1,123 @@
-# stroop-test-BCOG200
 # stroop-task
 
-A Python implementation of the classic **Stroop Task** — a cognitive psychology experiment that
-demonstrates how automatic word reading interferes with color naming.
+A Python implementation of the classic **Stroop Task** — one of the most
+replicated experiments in cognitive psychology. Participants are shown a
+color word (e.g., "RED") printed in an ink color that may or may not match
+the word. Their job is to name the **ink color** as quickly and accurately
+as possible, ignoring what the word says.
 
-## What Is the Stroop Task?
+This experiment is built with [pygame](https://www.pygame.org/), features a
+full practice block with feedback, saves per-trial data to CSV, and displays
+a results summary including the classic Stroop interference effect.
 
-In the Stroop Task, participants are shown a color word (e.g., "RED") printed in an ink color that
-may or may not match the word. The participant must name the **ink color**, ignoring the word
-itself. People are typically slower and less accurate when the word and ink color conflict
-(incongruent trials) than when they match (congruent trials). This difference is called the
-**Stroop effect**.
+## What is the Stroop Effect?
 
-## Project Status
+The **Stroop effect** (Stroop, 1935) is the finding that people respond
+slower and less accurately when the ink color and word conflict (incongruent
+trials, e.g., "RED" in blue ink) compared to when they match (congruent
+trials, e.g., "RED" in red ink). This occurs because reading is a highly
+practiced, automatic process that competes with the less automatic task of
+naming a color.
 
-- [x] Trial generation (congruent and incongruent)
-- [x] Response scoring
-- [x] Accuracy calculation
-- [x] Basic terminal experiment loop
-- [ ] Reaction time analysis by condition *(planned)*
-- [ ] Pygame graphical interface *(planned)*
-- [ ] Results saved to CSV *(planned)*
-- [ ] Results chart *(planned)*
+This experiment measures your personal Stroop effect as:
+
+> **Stroop Effect = Mean RT (incongruent) − Mean RT (congruent)**
+
+A positive value means you showed the typical interference effect.
 
 ## Installation
 
-This project currently requires only Python's standard library (no external packages needed).
+**Requirements:** Python 3.10 or higher.
 
 ```bash
+# 1. Clone the repository
 git clone https://github.com/YOUR_USERNAME/stroop-task.git
 cd stroop-task
+
+# 2. Install dependencies
+pip install -r requirements.txt
 ```
 
-## How to Run
+## Running the Experiment
 
 ```bash
-python main.py
-"""
-main.py
-
-Entry point for the Stroop Task experiment.
-Currently runs a basic text-based version in the terminal.
-
-BCOG 200 Final Project - Peer Review Draft
-
-NOTE: This is a terminal prototype. A graphical version using
-pygame is planned for the final submission.
-"""
-
-import time
-from stroop import generate_trial, score_response, calculate_accuracy
-
-
-def run_experiment(num_trials=10):
-    """
-    Run a simple text-based Stroop experiment in the terminal.
-
-    Parameters
-    ----------
-    num_trials : int
-        Number of trials to run (default: 10).
-
-    Returns
-    -------
-    list of dict
-        A list of result dictionaries, each containing:
-        - 'word'      : str
-        - 'color'     : str
-        - 'congruent' : bool
-        - 'response'  : str
-        - 'correct'   : bool
-        - 'rt'        : float, reaction time in seconds
-    """
-    print("\n=== Stroop Task Experiment ===")
-    print("Type the INK COLOR of each word (not the word itself).")
-    print("Options: red, blue, green, yellow")
-    print("Press Enter to begin...\n")
-    input()
-
-    results = []
-
-    for i in range(num_trials):
-        trial = generate_trial()
-        print(f"Trial {i + 1}: [{trial['word'].upper()}]")
-
-        start = time.time()
-        response = input("Your response: ").strip().lower()
-        rt = time.time() - start
-
-        correct = score_response(trial, response)
-
-        result = {
-            "word": trial["word"],
-            "color": trial["color"],
-            "congruent": trial["congruent"],
-            "response": response,
-            "correct": correct,
-            "rt": round(rt, 4),
-        }
-        results.append(result)
-
-        if correct:
-            print("Correct!\n")
-        else:
-            print(f"Incorrect. The ink color was: {trial['color']}\n")
-
-    return results
-
-
-def show_summary(results):
-    """
-    Print a basic summary of experiment results.
-
-    Parameters
-    ----------
-    results : list of dict
-        Results returned by run_experiment().
-    """
-    accuracy = calculate_accuracy(results)
-    print("\n=== Results ===")
-    print(f"Trials completed : {len(results)}")
-    print(f"Accuracy         : {accuracy * 100:.1f}%")
-
-    # TODO: Show separate accuracy for congruent vs incongruent trials
-    # TODO: Show mean reaction time
-
-
-if __name__ == "__main__":
-    results = run_experiment(num_trials=10)
-    show_summary(results)
-
+python stroop_task.py
 ```
 
-"""
-stroop.py
+You will be prompted to enter a participant name or ID, then walk through a
+short practice block followed by the real experiment. Results are saved
+automatically to the `data/` folder when you finish.
 
-Core module for the Stroop Task experiment.
-Implements trial generation and response scoring.
+## Controls
 
-BCOG 200 Final Project - Peer Review Draft
-"""
+| Key | Response |
+|-----|----------|
+| **F** | Red    |
+| **G** | Blue   |
+| **H** | Green  |
+| **J** | Yellow |
+| **Escape** | Quit at any time |
 
-import random
-import time
+## Testing
 
-
-COLORS = ["red", "blue", "green", "yellow"]
-
-COLOR_MAP = {
-    "red": (255, 0, 0),
-    "blue": (0, 0, 255),
-    "green": (0, 180, 0),
-    "yellow": (200, 180, 0),
-}
-
-
-def generate_trial(congruent=None):
-    """
-    Generate a single Stroop trial.
-
-    Parameters
-    ----------
-    congruent : bool or None
-        If True, word and ink color match (congruent trial).
-        If False, word and ink color differ (incongruent trial).
-        If None, randomly decide congruency.
-
-    Returns
-    -------
-    dict
-        A dictionary with keys:
-        - 'word'      : str, the word displayed on screen
-        - 'color'     : str, the ink color of the word
-        - 'congruent' : bool, whether the trial is congruent
-    """
-    if congruent is None:
-        congruent = random.choice([True, False])
-
-    word = random.choice(COLORS)
-
-    if congruent:
-        color = word
-    else:
-        options = [c for c in COLORS if c != word]
-        color = random.choice(options)
-
-    return {"word": word, "color": color, "congruent": congruent}
-
-
-def score_response(trial, response):
-    """
-    Check whether the participant's response was correct.
-
-    Parameters
-    ----------
-    trial : dict
-        A trial dictionary from generate_trial().
-    response : str
-        The participant's response (the color name they entered).
-
-    Returns
-    -------
-    bool
-        True if the response matches the ink color, False otherwise.
-    """
-    return response.strip().lower() == trial["color"]
-
-
-def calculate_accuracy(results):
-    """
-    Calculate accuracy across a list of trial results.
-
-    Parameters
-    ----------
-    results : list of dict
-        Each dict should have a 'correct' key (bool).
-
-    Returns
-    -------
-    float
-        Proportion correct (between 0.0 and 1.0).
-    """
-    if len(results) == 0:
-        return 0.0
-
-    correct = sum(1 for r in results if r["correct"])
-    return correct / len(results)
-
-
-# TODO: Add a function to calculate mean reaction time
-# TODO: Add a function to separate results by congruency condition
-
-
-Follow the on-screen instructions. Type the **ink color** of each word, not the word itself.
-
-## How to Run Tests
+Run all unit tests from the repository root:
 
 ```bash
-pytest tests/test_stroop.py
+python -m pytest
 ```
 
-## File Structure
+Or with verbose output:
+
+```bash
+pytest tests/test_stroop.py -v
+```
+
+All tests should pass with no errors. The tests cover trial generation,
+response scoring, accuracy calculation, RT calculation, condition splitting,
+and the full results summary — without requiring a display.
+
+## Code Structure
 
 ```
 stroop-task/
-├── main.py          # Entry point; runs the experiment
-├── stroop.py        # Core module: trial generation, scoring, analysis
-├── tests/
-│   └── test_stroop.py
-└── README.md
+├── stroop_task.py      # Entry point — runs the experiment
+├── requirements.txt    # External dependencies
+├── .gitignore
+├── README.md
+├── src/
+│   ├── __init__.py
+│   ├── config.py       # All experiment constants (colors, timing, keys)
+│   ├── stroop.py       # Core logic: trial generation, scoring, analysis
+│   └── display.py      # Pygame rendering helpers (no game logic)
+└── tests/
+    ├── __init__.py
+    └── test_stroop.py  # pytest unit tests for src/stroop.py
 ```
 
+### Module overview
+
+| File | Responsibility |
+|------|---------------|
+| `stroop_task.py` | Experiment flow: collect ID, run blocks, show results |
+| `src/config.py` | Colors, key bindings, trial counts, timing constants |
+| `src/stroop.py` | Pure-Python logic: generate trials, score, analyze, save |
+| `src/display.py` | All pygame drawing: screens, text, feedback |
+
+## Output Format
+
+Each run saves a CSV to `data/` with one row per trial:
+
+| Column | Description |
+|--------|-------------|
+| `trial` | Trial number (1-indexed) |
+| `word` | The color word displayed |
+| `color` | The ink color |
+| `congruent` | `True` or `False` |
+| `response` | The key the participant pressed |
+| `correct` | `True` or `False` |
+| `rt` | Reaction time in seconds |
+
+## References
+
+Stroop, J. R. (1935). Studies of interference in serial verbal reactions.
+*Journal of Experimental Psychology*, *18*(6), 643–662.
